@@ -29,11 +29,11 @@ pi -e . -m "hello"                 # one-shot message
 A pi extension (declared via `"pi": { "extensions": ["./index.ts"] }` in `package.json`). Dependencies:
 - `@earendil-works/gondolin` — VM creation, filesystem operations, `ShadowProvider`
 - `@earendil-works/pi-coding-agent` — tool factories and type definitions
-- `yaml` — parsing `mounts.yml`
+- `yaml` — parsing `pi-gondolin-mount-config.yml`
 
 **VM lifecycle:**
 - Created lazily on first `session_start` via `VM.create()`, binding CWD as a `RealFSProvider` mount at `/workspace`
-- The CWD provider is wrapped in a `ShadowProvider` that masks `mounts.yml` from the VM (ENOENT on reads, omitted from directory listings)
+- The CWD provider is wrapped in a `ShadowProvider` that masks `pi-gondolin-mount-config.yml` from the VM (ENOENT on reads, omitted from directory listings)
 - Reused across all tool calls (singleton via `ensureVm()`)
 - Destroyed on `session_shutdown`
 
@@ -57,7 +57,7 @@ The ops factory functions (`createGondolinReadOps`, `createGondolinWriteOps`, et
 - `before_agent_start` — rewrites the system prompt to show `/workspace` as CWD
 - Registered command `/gondolin` — shows VM status
 
-### `mounts.yml`
+### `pi-gondolin-mount-config.yml`
 
 Additional directory mounts in docker-compose volume syntax. Read from CWD (host filesystem) before VM creation. Masked from the VM via `ShadowProvider` — the LLM cannot see or access it.
 

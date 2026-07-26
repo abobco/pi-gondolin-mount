@@ -3,7 +3,7 @@
  * with configurable additional directory mounts.
  *
  * The host working directory is mounted at /workspace in the guest via a
- * ShadowProvider that masks mounts.yml from the VM. File changes under
+ * ShadowProvider that masks pi-gondolin-mount-config.yml from the VM. File changes under
  * /workspace write through to the host; other guest filesystem changes are
  * isolated to the VM.
  *
@@ -51,9 +51,9 @@ const GUEST_WORKSPACE = "/workspace";
 const DEFAULT_GREP_LIMIT = 100;
 
 // Files masked from the VM filesystem (read from host before VM creation)
-const MASKED_GUEST_FILES = ["/mounts.yml"];
+const MASKED_GUEST_FILES = ["/pi-gondolin-mount-config.yml"];
 
-// Additional mounts configured via mounts.yml (read from host before VM creation, masked from guest)
+// Additional mounts configured via pi-gondolin-mount-config.yml (read from host before VM creation, masked from guest)
 interface MountEntry {
 	guestPath: string; // absolute guest path, e.g. "/mnt/data"
 	hostPath: string; // absolute host path, e.g. "/home/user/data"
@@ -63,7 +63,7 @@ interface MountEntry {
 let additionalMounts: MountEntry[] = [];
 
 async function loadMountsConfig(localCwd: string): Promise<{ mounts: MountEntry[]; errors: string[] }> {
-	const filePath = path.join(localCwd, "mounts.yml");
+	const filePath = path.join(localCwd, "pi-gondolin-mount-config.yml");
 	const errors: string[] = [];
 	let mounts: MountEntry[] = [];
 	try {
@@ -493,7 +493,7 @@ export default function (pi: ExtensionAPI) {
 	async function startVm(ctx?: ExtensionContext): Promise<VM> {
 		ctx?.ui.setStatus("gondolin", ctx.ui.theme.fg("accent", `Gondolin: starting ${GUEST_WORKSPACE}`));
 
-		// Load additional mounts from mounts.yml (host read, masked from guest)
+		// Load additional mounts from pi-gondolin-mount-config.yml (host read, masked from guest)
 		const { mounts: loadedMounts, errors: mountErrors } = await loadMountsConfig(localCwd);
 		additionalMounts = loadedMounts;
 		for (const err of mountErrors) {

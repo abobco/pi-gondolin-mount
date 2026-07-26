@@ -1,4 +1,4 @@
-# pi-gondolin-mount
+ # pi-gondolin-mount
 
 A [pi](https://pi.dev) extension that sandboxes LLM coding agents inside a [Gondolin](https://github.com/earendil-works/gondolin) micro-VM with configurable additional directory mounts. All of pi's built-in tools (Read, Write, Edit, Bash, etc.) are routed through an Alpine VM, so the LLM only sees and can modify files within the sandbox.
 
@@ -57,7 +57,7 @@ The current working directory is mounted at `/workspace` inside the VM. File cha
 
 ## Additional mounts
 
-Create a `mounts.yml` in your project directory to grant the VM access to directories outside the project:
+Create a `pi-gondolin-mount-config.yml` in your project directory to grant the VM access to directories outside the project:
 
 ```yaml
 mounts:
@@ -65,7 +65,7 @@ mounts:
   - /home/user/readonly:/mnt/ro:ro  # read-only
 ```
 
-**`mounts.yml` is automatically masked from the VM** — the LLM cannot see or access it. The extension reads it from the host filesystem before the VM is created.
+**`pi-gondolin-mount-config.yml` is automatically masked from the VM** — the LLM cannot see or access it. The extension reads it from the host filesystem before the VM is created.
 
 ## Sandbox CLAUDE.md
 
@@ -73,7 +73,7 @@ Place a `CLAUDE.md` in your project directory to give the sandboxed LLM environm
 
 ## Credit
 
-This extension is derived from the [Gondolin extension example](https://github.com/earendil-works/pi) in the official pi repository (`packages/coding-agent/examples/extensions/gondolin`). It differs from that extension in that it allows additional directory mounts to be configured via the `mounts.yml` file.
+This extension is derived from the [Gondolin extension example](https://github.com/earendil-works/pi) in the official pi repository (`packages/coding-agent/examples/extensions/gondolin`). It differs from that extension in that it allows additional directory mounts to be configured via the `pi-gondolin-mount-config.yml` file.
 
 ## Architecture
 
@@ -81,7 +81,7 @@ This extension is derived from the [Gondolin extension example](https://github.c
 pi-gondolin-mount/
 ├── index.ts                    # pi extension entry point
 ├── package.json
-├── mounts.yml                  # additional mount config (masked from VM)
+├── pi-gondolin-mount-config.yml                  # additional mount config (masked from VM)
 └── sandbox-claude-template.md  # reference for sandboxed CLAUDE.md
 ```
 
