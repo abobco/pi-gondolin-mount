@@ -9,7 +9,7 @@
  *
  * Usage (preferred — install globally):
  *   pi install npm:pi-gondolin-mount
- *   pi install git:https://gitea.bobco.uk/abobco/pi-template.git
+ *   pi install git:https://github.com/abobco/pi-gondolin-mount.git
  *
  * Usage (development — load from local path):
  *   pi -e /path/to/pi-gondolin-mount

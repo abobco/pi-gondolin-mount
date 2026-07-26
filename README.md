@@ -13,7 +13,7 @@ pi install npm:pi-gondolin-mount
 Or install directly from git:
 
 ```sh
-pi install git:https://gitea.bobco.uk/abobco/pi-template.git
+pi install git:https://github.com/abobco/pi-gondolin-mount.git
 ```
 
 Once installed, the extension is discovered automatically — no `-e` flag needed. Just run `pi` from any project directory.
@@ -21,7 +21,7 @@ Once installed, the extension is discovered automatically — no `-e` flag neede
 ### Local development
 
 ```sh
-git clone https://gitea.bobco.uk/abobco/pi-template.git pi-gondolin-mount
+git clone https://github.com/abobco/pi-gondolin-mount.git
 cd pi-gondolin-mount
 npm install --ignore-scripts
 ```
