@@ -1,0 +1,12 @@
+# Additional Gondolin VM mounts.
+# Each entry is a string in the format:
+#   host_path:guest_path       (read-write)
+#   host_path:guest_path:ro    (read-only)
+#   host_path:guest_path:rw    (read-write, explicit)
+#
+# Example:
+# mounts:
+#   - /home/user/data:/mnt/data
+#   - /home/user/readonly:/mnt/readonly:ro
+
+mounts: []

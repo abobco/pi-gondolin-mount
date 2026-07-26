@@ -1,0 +1,46 @@
+{
+	"name": "pi-gondolin-mount",
+	"version": "0.81.1",
+	"description": "pi extension that sandboxes LLM coding agents inside a Gondolin micro-VM with configurable additional mounts",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://gitea.bobco.uk/abobco/pi-template.git"
+	},
+	"homepage": "https://gitea.bobco.uk/abobco/pi-template",
+	"bugs": {
+		"url": "https://gitea.bobco.uk/abobco/pi-template/issues"
+	},
+	"keywords": [
+		"pi-package",
+		"pi",
+		"gondolin",
+		"sandbox",
+		"vm",
+		"mounts"
+	],
+	"files": [
+		"index.ts",
+		"sandbox-claude-template.md",
+		"README.md",
+		"LICENSE"
+	],
+	"type": "module",
+	"scripts": {
+		"clean": "echo 'nothing to clean'",
+		"build": "echo 'nothing to build'",
+		"check": "echo 'nothing to check'"
+	},
+	"pi": {
+		"extensions": [
+			"./index.ts"
+		]
+	},
+	"peerDependencies": {
+		"@earendil-works/pi-coding-agent": "*"
+	},
+	"dependencies": {
+		"@earendil-works/gondolin": "0.12.0",
+		"yaml": "^2.7.1"
+	}
+}
