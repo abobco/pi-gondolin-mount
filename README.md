@@ -71,6 +71,10 @@ mounts:
 
 Place a `CLAUDE.md` in your project directory to give the sandboxed LLM environment context. See [`sandbox-claude-template.md`](sandbox-claude-template.md) for a template written from the VM's perspective (`/workspace`, Alpine Linux, ephemeral filesystem).
 
+## Credit
+
+This extension is derived from the [Gondolin extension example](https://github.com/earendil-works/pi) in the official pi repository (`packages/coding-agent/examples/extensions/gondolin`). It differs from that extension in that it allows additional directory mounts to be configured via the `mounts.yml` file.
+
 ## Architecture
 
 ```

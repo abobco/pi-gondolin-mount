@@ -8,6 +8,8 @@ A [pi](https://pi.dev) extension that sandboxes LLM coding agents inside a [Gond
 
 The extension is TypeScript loaded directly by pi (no build step). The `package.json` build/check/clean scripts are stubs.
 
+**Based on:** the [Gondolin extension example](https://github.com/earendil-works/pi) in the official pi repository (`packages/coding-agent/examples/extensions/gondolin`).
+
 ## Commands
 
 ```sh
