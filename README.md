@@ -1,6 +1,6 @@
  # pi-gondolin-mount
 
-A [pi](https://pi.dev) extension that sandboxes LLM coding agents inside a [Gondolin](https://github.com/earendil-works/gondolin) micro-VM with configurable additional directory mounts. All of pi's built-in tools (Read, Write, Edit, Bash, etc.) are routed through an Alpine VM, so the LLM only sees and can modify files within the sandbox.
+A [pi](https://pi.dev) extension that sandboxes LLM coding agents inside a [Gondolin](https://github.com/earendil-works/gondolin) micro-VM with **configurable additional directory mounts**. All of pi's built-in tools (Read, Write, Edit, Bash, etc.) are routed through an Alpine VM, so the LLM only sees and can modify files within the sandbox.
 
 ## Installation
 
