@@ -1,8 +1,16 @@
  # pi-gondolin-mount
 
-A [pi](https://pi.dev) extension that sandboxes LLM coding agents inside a [Gondolin](https://github.com/earendil-works/gondolin) micro-VM with **configurable additional directory mounts**. All of pi's built-in tools (Read, Write, Edit, Bash, etc.) are routed through an Alpine VM, so the LLM only sees and can modify files within the sandbox.
+A basic extension for [pi](https://pi.dev) that allows mounting multiple drives into a sandboxed   [Gondolin](https://github.com/earendil-works/gondolin) micro-VM, using a familiar docker-compose-like syntax
+
+## Why?
+
+I found myself working on a project where I needed to copy a large number of files from a slow network drive. I didn't like any of the existing options for sandboxing an agent to do this for me, so I decided to extend the [Gondolin extension example](https://github.com/earendil-works/pi) from the pi repository to meet my needs
 
 ## Installation
+
+**Requirements:**
+- Node.js >= 23.6.0 (for `@earendil-works/gondolin`)
+- QEMU (`sudo pacman -S qemu` on Arch, `sudo apt install qemu-utils qemu-system-x86` on Debian)
 
 ### Global install (recommended)
 
@@ -60,9 +68,6 @@ Then load it with the `-e` flag:
 pi -e /path/to/pi-gondolin-mount
 ```
 
-**Requirements:**
-- Node.js >= 23.6.0 (for `@earendil-works/gondolin`)
-- QEMU (`sudo pacman -S qemu` on Arch, `sudo apt install qemu-utils qemu-system-x86` on Debian)
 ## Credit
 
 This extension is derived from the [Gondolin extension example](https://github.com/earendil-works/pi) in the official pi repository (`packages/coding-agent/examples/extensions/gondolin`). It differs from that extension in that it allows additional directory mounts to be configured via the `pi-gondolin-mount-config.yml` file.

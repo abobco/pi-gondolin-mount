@@ -1,6 +1,6 @@
 {
 	"name": "pi-gondolin-mount",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "pi extension that sandboxes LLM coding agents inside a Gondolin micro-VM with configurable additional mounts",
 	"license": "MIT",
 	"repository": {
