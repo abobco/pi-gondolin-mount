@@ -10,3 +10,11 @@
 #   - /home/user/readonly:/mnt/readonly:ro
 
 mounts: []
+
+# Optional: path to a custom Gondolin image asset directory produced by
+# `gondolin build --output <dir>` (contains manifest.json, kernel, rootfs.ext4).
+# Relative paths resolve against this project directory. When unset, falls back
+# to the GONDOLIN_GUEST_DIR env var, then to Gondolin's default image.
+#
+# Example (use the Rust-enabled image built from rust-image-config.json):
+# image: ./rust-assets

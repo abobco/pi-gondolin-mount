@@ -1,1 +1,4 @@
 /node_modules
+
+# Gondolin build outputs (from `gondolin build --output ...`)
+/*-assets/
