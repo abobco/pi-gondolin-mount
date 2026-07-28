@@ -62,10 +62,16 @@ interface MountEntry {
 
 let additionalMounts: MountEntry[] = [];
 
-async function loadMountsConfig(localCwd: string): Promise<{ mounts: MountEntry[]; errors: string[] }> {
+// Custom Gondolin image directory in use (from config `image` or GONDOLIN_GUEST_DIR); undefined = default image
+let activeImagePath: string | undefined;
+
+async function loadMountsConfig(
+	localCwd: string,
+): Promise<{ mounts: MountEntry[]; image: string | undefined; errors: string[] }> {
 	const filePath = path.join(localCwd, "pi-gondolin-mount-config.yml");
 	const errors: string[] = [];
 	let mounts: MountEntry[] = [];
+	let image: string | undefined;
 	try {
 		const raw = await fs.readFile(filePath, "utf8");
 		let parsed: unknown;
@@ -73,17 +79,25 @@ async function loadMountsConfig(localCwd: string): Promise<{ mounts: MountEntry[
 			parsed = parseYaml(raw);
 		} catch {
 			errors.push(`${filePath}: invalid YAML`);
-			return { mounts, errors };
+			return { mounts, image, errors };
 		}
 		if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
 			errors.push(`${filePath}: config must be a YAML object`);
-			return { mounts, errors };
+			return { mounts, image, errors };
 		}
 		const obj = parsed as Record<string, unknown>;
+		const rawImage = obj.image;
+		if (rawImage !== undefined && rawImage !== null) {
+			if (typeof rawImage !== "string" || rawImage.trim() === "") {
+				errors.push(`${filePath}: "image" must be a non-empty string (path to a gondolin build output directory)`);
+			} else {
+				image = path.isAbsolute(rawImage) ? rawImage : path.resolve(localCwd, rawImage);
+			}
+		}
 		const rawMounts = obj.mounts;
 		if (!Array.isArray(rawMounts)) {
 			errors.push(`${filePath}: "mounts" must be a YAML array`);
-			return { mounts, errors };
+			return { mounts, image, errors };
 		}
 		const seenGuests = new Set<string>();
 		for (let i = 0; i < rawMounts.length; i++) {
@@ -152,7 +166,7 @@ async function loadMountsConfig(localCwd: string): Promise<{ mounts: MountEntry[
 	}
 	// Sort by longest guest path first so nested mounts match correctly
 	mounts.sort((a, b) => b.guestPath.length - a.guestPath.length);
-	return { mounts, errors };
+	return { mounts, image, errors };
 }
 
 type TextToolResult<TDetails> = {
@@ -493,11 +507,25 @@ export default function (pi: ExtensionAPI) {
 	async function startVm(ctx?: ExtensionContext): Promise<VM> {
 		ctx?.ui.setStatus("gondolin", ctx.ui.theme.fg("accent", `Gondolin: starting ${GUEST_WORKSPACE}`));
 
-		// Load additional mounts from pi-gondolin-mount-config.yml (host read, masked from guest)
-		const { mounts: loadedMounts, errors: mountErrors } = await loadMountsConfig(localCwd);
+		// Load additional mounts + optional custom image from pi-gondolin-mount-config.yml (host read, masked from guest)
+		const { mounts: loadedMounts, image: configImage, errors: mountErrors } = await loadMountsConfig(localCwd);
 		additionalMounts = loadedMounts;
 		for (const err of mountErrors) {
 			ctx?.ui.notify(`Gondolin mounts config: ${err}`, "warning");
+		}
+
+		// Custom image: config `image` wins, then GONDOLIN_GUEST_DIR env var, else Gondolin's default image
+		activeImagePath = configImage ?? process.env.GONDOLIN_GUEST_DIR ?? undefined;
+		if (activeImagePath) {
+			try {
+				await fs.access(path.join(activeImagePath, "manifest.json"));
+			} catch {
+				ctx?.ui.notify(
+					`Gondolin image: "${activeImagePath}" is not a valid build output (no manifest.json). Falling back to the default image.`,
+					"warning",
+				);
+				activeImagePath = undefined;
+			}
 		}
 
 		// Build mounts object: workspace (masked) + additional directories
@@ -514,6 +542,7 @@ export default function (pi: ExtensionAPI) {
 		const created = await VM.create({
 			sessionLabel: `pi ${path.basename(localCwd)}`,
 			vfs: { mounts },
+			...(activeImagePath ? { sandbox: { imagePath: activeImagePath } } : {}),
 		});
 		const bashProbe = await created.exec(["/bin/sh", "-lc", "command -v bash || true"]);
 		shellPath = bashProbe.stdout.trim() || "/bin/sh";
@@ -522,7 +551,8 @@ export default function (pi: ExtensionAPI) {
 			"gondolin",
 			ctx.ui.theme.fg("accent", `Gondolin: ${created.id.slice(0, 8)} (${GUEST_WORKSPACE})`),
 		);
-		ctx?.ui.notify(`Gondolin VM ready. ${localCwd} is mounted at ${GUEST_WORKSPACE}.`, "info");
+		const imageNote = activeImagePath ? ` Image: ${activeImagePath}.` : "";
+		ctx?.ui.notify(`Gondolin VM ready. ${localCwd} is mounted at ${GUEST_WORKSPACE}.${imageNote}`, "info");
 		return created;
 	}
 
@@ -562,6 +592,7 @@ export default function (pi: ExtensionAPI) {
 					`Gondolin VM: ${activeVm.id}`,
 					`Host workspace: ${localCwd}`,
 					`Guest workspace: ${GUEST_WORKSPACE}`,
+					`Image: ${activeImagePath ?? "default"}`,
 					`Shell: ${shellPath}`,
 				].join("\n"),
 				"info",
