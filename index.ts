@@ -61,13 +61,11 @@ interface MountEntry {
 }
 
 let additionalMounts: MountEntry[] = [];
-let additionalPackages: string[] = [];
 
-async function loadConfig(localCwd: string): Promise<{ mounts: MountEntry[]; packages: string[]; errors: string[] }> {
+async function loadMountsConfig(localCwd: string): Promise<{ mounts: MountEntry[]; errors: string[] }> {
 	const filePath = path.join(localCwd, "pi-gondolin-mount-config.yml");
 	const errors: string[] = [];
 	let mounts: MountEntry[] = [];
-	let packages: string[] = [];
 	try {
 		const raw = await fs.readFile(filePath, "utf8");
 		let parsed: unknown;
@@ -75,35 +73,17 @@ async function loadConfig(localCwd: string): Promise<{ mounts: MountEntry[]; pac
 			parsed = parseYaml(raw);
 		} catch {
 			errors.push(`${filePath}: invalid YAML`);
-			return { mounts, packages, errors };
+			return { mounts, errors };
 		}
 		if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
 			errors.push(`${filePath}: config must be a YAML object`);
-			return { mounts, packages, errors };
+			return { mounts, errors };
 		}
 		const obj = parsed as Record<string, unknown>;
-
-		// Parse packages
-		const rawPackages = obj.packages;
-		if (rawPackages !== undefined) {
-			if (!Array.isArray(rawPackages)) {
-				errors.push(`${filePath}: "packages" must be a YAML array`);
-			} else {
-				for (let i = 0; i < rawPackages.length; i++) {
-					if (typeof rawPackages[i] !== "string" || !rawPackages[i].trim()) {
-						errors.push(`${filePath}: packages[${i}]: must be a non-empty string`);
-					} else {
-						packages.push(rawPackages[i].trim());
-					}
-				}
-			}
-		}
-
-		// Parse mounts
 		const rawMounts = obj.mounts;
 		if (!Array.isArray(rawMounts)) {
 			errors.push(`${filePath}: "mounts" must be a YAML array`);
-			return { mounts, packages, errors };
+			return { mounts, errors };
 		}
 		const seenGuests = new Set<string>();
 		for (let i = 0; i < rawMounts.length; i++) {
@@ -172,7 +152,7 @@ async function loadConfig(localCwd: string): Promise<{ mounts: MountEntry[]; pac
 	}
 	// Sort by longest guest path first so nested mounts match correctly
 	mounts.sort((a, b) => b.guestPath.length - a.guestPath.length);
-	return { mounts, packages, errors };
+	return { mounts, errors };
 }
 
 type TextToolResult<TDetails> = {
@@ -513,12 +493,11 @@ export default function (pi: ExtensionAPI) {
 	async function startVm(ctx?: ExtensionContext): Promise<VM> {
 		ctx?.ui.setStatus("gondolin", ctx.ui.theme.fg("accent", `Gondolin: starting ${GUEST_WORKSPACE}`));
 
-		// Load config from pi-gondolin-mount-config.yml (host read, masked from guest)
-		const { mounts: loadedMounts, packages: loadedPackages, errors: configErrors } = await loadConfig(localCwd);
+		// Load additional mounts from pi-gondolin-mount-config.yml (host read, masked from guest)
+		const { mounts: loadedMounts, errors: mountErrors } = await loadMountsConfig(localCwd);
 		additionalMounts = loadedMounts;
-		additionalPackages = loadedPackages;
-		for (const err of configErrors) {
-			ctx?.ui.notify(`Gondolin config: ${err}`, "warning");
+		for (const err of mountErrors) {
+			ctx?.ui.notify(`Gondolin mounts config: ${err}`, "warning");
 		}
 
 		// Build mounts object: workspace (masked) + additional directories
@@ -538,19 +517,6 @@ export default function (pi: ExtensionAPI) {
 		});
 		const bashProbe = await created.exec(["/bin/sh", "-lc", "command -v bash || true"]);
 		shellPath = bashProbe.stdout.trim() || "/bin/sh";
-
-		// Install additional apk packages if configured
-		if (additionalPackages.length > 0) {
-			ctx?.ui.setStatus("gondolin", ctx.ui.theme.fg("accent", `Gondolin: installing packages...`));
-			const pkgList = additionalPackages.join(" ");
-			const apkResult = await created.exec(["/bin/sh", "-lc", `apk add --no-cache ${pkgList}`]);
-			if (apkResult.exitCode === 0) {
-				ctx?.ui.notify(`Gondolin: packages installed: ${pkgList}`, "info");
-			} else {
-				ctx?.ui.notify(`Gondolin: package install failed (exit ${apkResult.exitCode}): ${apkResult.stderr || apkResult.stdout}`, "error");
-			}
-		}
-
 		vm = created;
 		ctx?.ui.setStatus(
 			"gondolin",
@@ -691,9 +657,6 @@ export default function (pi: ExtensionAPI) {
 				.map((m) => `${m.guestPath} (mounted from ${m.hostPath}${m.mode === "ro" ? ", read-only" : ""})`)
 				.join(", ");
 			guestLine += `. Additional mounts: ${mountDescs}`;
-		}
-		if (additionalPackages.length > 0) {
-			guestLine += `. Pre-installed packages: ${additionalPackages.join(", ")}`;
 		}
 		const systemPrompt = event.systemPrompt.includes(localLine)
 			? event.systemPrompt.replace(localLine, guestLine)
